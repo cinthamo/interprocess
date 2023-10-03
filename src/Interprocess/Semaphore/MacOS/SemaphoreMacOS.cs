@@ -4,7 +4,7 @@ namespace Cloudtoid.Interprocess.Semaphore.MacOS
 {
     internal class SemaphoreMacOS : IInterprocessSemaphoreWaiter, IInterprocessSemaphoreReleaser
     {
-        private const string HandleNamePrefix = "/ct.ip.";
+        private const string HandleNamePrefix = "/gx";
         private readonly string name;
         private readonly bool deleteOnDispose;
         private readonly IntPtr handle;
