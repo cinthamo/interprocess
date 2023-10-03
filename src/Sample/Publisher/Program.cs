@@ -21,7 +21,7 @@ namespace Publisher
             // Create a message queue publisher
 
             var options = new QueueOptions(
-                queueName: "sample-queue",
+                queueName: "S1123456",
                 capacity: 1024 * 1024);
 
             using var publisher = factory.CreatePublisher(options);

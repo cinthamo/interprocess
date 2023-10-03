@@ -23,6 +23,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{A178B233
 		..\.github\workflows\publish.yml = ..\.github\workflows\publish.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SemTest", "SemTest\SemTest.csproj", "{06D0E6FB-B03D-4295-AF7D-2C28372B6260}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,6 +51,10 @@ Global
 		{D19F0C91-DEEE-4BC1-B5FC-0F5ACCE09E76}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D19F0C91-DEEE-4BC1-B5FC-0F5ACCE09E76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D19F0C91-DEEE-4BC1-B5FC-0F5ACCE09E76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{06D0E6FB-B03D-4295-AF7D-2C28372B6260}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06D0E6FB-B03D-4295-AF7D-2C28372B6260}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06D0E6FB-B03D-4295-AF7D-2C28372B6260}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06D0E6FB-B03D-4295-AF7D-2C28372B6260}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
