@@ -2,7 +2,7 @@
 
 namespace Cloudtoid.Interprocess.Semaphore.Linux
 {
-    internal class SemaphoreLinux : IInterprocessSemaphoreWaiter, IInterprocessSemaphoreReleaser
+    public class SemaphoreLinux : IInterprocessSemaphoreWaiter, IInterprocessSemaphoreReleaser
     {
         private const string HandleNamePrefix = "/ct.ip.";
         private readonly string name;
@@ -10,10 +10,13 @@ namespace Cloudtoid.Interprocess.Semaphore.Linux
         private readonly IntPtr handle;
 
         internal SemaphoreLinux(string name, bool deleteOnDispose = false)
+            : this(name, 0, deleteOnDispose) { }
+
+        public SemaphoreLinux(string name, uint initialCount, bool deleteOnDispose = false)
         {
             this.name = name = HandleNamePrefix + name;
             this.deleteOnDispose = deleteOnDispose;
-            handle = Interop.CreateOrOpenSemaphore(name, 0);
+            handle = Interop.CreateOrOpenSemaphore(name, initialCount);
         }
 
         ~SemaphoreLinux()

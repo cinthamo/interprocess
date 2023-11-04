@@ -2,7 +2,7 @@
 
 namespace Cloudtoid.Interprocess.Semaphore.MacOS
 {
-    internal class SemaphoreMacOS : IInterprocessSemaphoreWaiter, IInterprocessSemaphoreReleaser
+    public class SemaphoreMacOS : IInterprocessSemaphoreWaiter, IInterprocessSemaphoreReleaser
     {
         private const string HandleNamePrefix = "/gx";
         private readonly string name;
@@ -10,10 +10,13 @@ namespace Cloudtoid.Interprocess.Semaphore.MacOS
         private readonly IntPtr handle;
 
         internal SemaphoreMacOS(string name, bool deleteOnDispose = false)
+            : this(name, 0, deleteOnDispose) { }
+
+        public SemaphoreMacOS(string name, uint initialCount, bool deleteOnDispose = false)
         {
             this.name = name = HandleNamePrefix + name;
             this.deleteOnDispose = deleteOnDispose;
-            handle = Interop.CreateOrOpenSemaphore(name, 0);
+            handle = Interop.CreateOrOpenSemaphore(name, initialCount);
         }
 
         ~SemaphoreMacOS()

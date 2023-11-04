@@ -3,14 +3,14 @@
 namespace Cloudtoid.Interprocess.Semaphore.Windows
 {
     // just a wrapper over the Windows named semaphore
-    internal sealed class SemaphoreWindows : IInterprocessSemaphoreWaiter, IInterprocessSemaphoreReleaser
+    public sealed class SemaphoreWindows : IInterprocessSemaphoreWaiter, IInterprocessSemaphoreReleaser
     {
         private const string HandleNamePrefix = @"Global\CT.IP.";
         private readonly SysSemaphore handle;
 
-        internal SemaphoreWindows(string name)
+        public SemaphoreWindows(string name, int initialCount = 0, int maximumCount = int.MaxValue)
         {
-            handle = new SysSemaphore(0, int.MaxValue, HandleNamePrefix + name);
+            handle = new SysSemaphore(initialCount, maximumCount, HandleNamePrefix + name);
         }
 
         public void Dispose()
