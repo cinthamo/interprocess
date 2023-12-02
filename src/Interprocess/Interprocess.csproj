@@ -4,8 +4,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>Cloudtoid.Interprocess</RootNamespace>
     <AssemblyName>Cloudtoid.Interprocess</AssemblyName>
-    <TargetFramework>net7.0</TargetFramework>
-    <TargetFrameworks />
   </PropertyGroup>
 
   <!-- NuGet Packaging -->
