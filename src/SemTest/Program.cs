@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using Cloudtoid.Interprocess.Semaphore.MacOS;
 
 namespace SemTest
 {
@@ -30,36 +31,64 @@ namespace SemTest
     [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1300:Element should begin with upper-case letter", Justification = "Matching the exact names in Linux/MacOS")]
     public static partial class Program
     {
-        private const string Lib = "libSystem.dylib";
-        private const int OCREAT = 0x0200;  // create the semaphore if it does not exist
+        private const string Lib = "/Users/cristian/Documents/GX/dev/interprocess/src/Interprocess/bin/Cloudtoid.Interprocess.Native.dylib";
+        //private const int OCREAT = 0x0200;  // create the semaphore if it does not exist
+        //private const int OEXCL = 0x0400;
 
         private static readonly IntPtr SemFailed = new(-1);
 
         [DllImport(Lib, SetLastError = true)]
-        private static extern IntPtr sem_open([MarshalAs(UnmanagedType.LPStr)] string name, int oflag, uint mode, uint value);
+        private static extern IntPtr gx_sem_open_or_create([MarshalAs(UnmanagedType.LPStr)] string name, uint value);
 
         [LibraryImport(Lib, SetLastError = true)]
-        private static partial int sem_close(IntPtr handle);
+        private static partial int gx_sem_close(IntPtr handle);
 
-        private static void CreateOrOpenSemaphore(string name, uint initialCount)
+        [DllImport(Lib, SetLastError = true)]
+        private static extern int gx_sem_trywait(IntPtr handle);
+
+        [DllImport(Lib, SetLastError = true)]
+        private static extern int gx_sem_unlink([MarshalAs(UnmanagedType.LPStr)] string name);
+
+        [DllImport(Lib, SetLastError = true)]
+        private static extern int gx_sem_post(IntPtr handle);
+
+        public static void Main()
         {
-            var handle = sem_open(name, OCREAT, (uint)PosixFilePermissions.ACCESSPERMS, initialCount);
+            var x = 1;
+            if (x == 0)
+                DirectCall();
+            else
+                ClassCall();
+        }
+
+        private static void ClassCall()
+        {
+            gx_sem_unlink("/gx/name3");
+            var s = new SemaphoreMacOS("/name3", 0, true);
+            s.Wait(5000);
+            Console.WriteLine("Success");
+        }
+
+        private static void DirectCall()
+        {
+            string name = "/gx/name3"; //"/gxW586311";
+            gx_sem_unlink(name);
+            var handle = gx_sem_open_or_create(name, 0);
+            //var handle = gx_sem_open(name, OCREAT | OEXCL, (uint)PosixFilePermissions.ACCESSPERMS, 0);
             if (handle != SemFailed)
             {
-                sem_close(handle);
-                Console.WriteLine($"Success");
+                int x = gx_sem_trywait(handle);
+                int err = Marshal.GetLastWin32Error();
+                //sem_post(handle);
+                //sem_wait(handle);
+                gx_sem_close(handle);
+                Console.WriteLine($"Success {x} {err}");
             }
             else
             {
                 int error = Marshal.GetLastWin32Error();
-                Console.WriteLine($"Error: {error}");
+                Console.WriteLine($"Error open: {error}");
             }
-        }
-
-        public static void Main()
-        {
-            //CreateOrOpenSemaphore("/ct.ip.SpeciBuildSegme127940Q1", 0);
-            CreateOrOpenSemaphore("/ct.ip.Spec", 0);
         }
     }
 }

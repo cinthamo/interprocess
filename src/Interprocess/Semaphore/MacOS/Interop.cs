@@ -9,9 +9,8 @@ namespace Cloudtoid.Interprocess.Semaphore.MacOS
     [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1300:Element should begin with upper-case letter", Justification = "Matching the exact names in Linux/MacOS")]
     internal static class Interop
     {
-        private const string Lib = "libSystem.dylib";
+        private const string Lib = "Cloudtoid.Interprocess.Native.dylib";
         private const int SEMVALUEMAX = 32767;
-        private const int OCREAT = 0x0200;  // create the semaphore if it does not exist
 
         private const int ENOENT = 2;        // The named semaphore does not exist.
         private const int EINTR = 4;         // Semaphore operation was interrupted by a signal.
@@ -31,33 +30,36 @@ namespace Cloudtoid.Interprocess.Semaphore.MacOS
         private static unsafe int Error => Marshal.GetLastWin32Error();
 
         [DllImport(Lib, SetLastError = true)]
-        private static extern IntPtr sem_open([MarshalAs(UnmanagedType.LPStr)] string name, int oflag, uint mode, uint value);
+        private static extern IntPtr gx_sem_open_existing([MarshalAs(UnmanagedType.LPStr)] string name);
 
         [DllImport(Lib, SetLastError = true)]
-        private static extern int sem_post(IntPtr handle);
+        private static extern IntPtr gx_sem_open_or_create([MarshalAs(UnmanagedType.LPStr)] string name, uint value);
 
         [DllImport(Lib, SetLastError = true)]
-        private static extern int sem_wait(IntPtr handle);
+        private static extern int gx_sem_post(IntPtr handle);
 
         [DllImport(Lib, SetLastError = true)]
-        private static extern int sem_trywait(IntPtr handle);
+        private static extern int gx_sem_wait(IntPtr handle);
 
         [DllImport(Lib, SetLastError = true)]
-        private static extern int sem_unlink([MarshalAs(UnmanagedType.LPStr)] string name);
+        private static extern int gx_sem_trywait(IntPtr handle);
 
         [DllImport(Lib, SetLastError = true)]
-        private static extern int sem_close(IntPtr handle);
+        private static extern int gx_sem_close(IntPtr handle);
+
+        [DllImport(Lib, SetLastError = true)]
+        private static extern int gx_sem_unlink([MarshalAs(UnmanagedType.LPStr)] string name);
 
         internal static IntPtr CreateOrOpenSemaphore(string name, uint initialCount)
         {
-            var handle = sem_open(name, OCREAT, (uint)PosixFilePermissions.ACCESSPERMS, initialCount);
+            var handle = gx_sem_open_or_create(name, initialCount);
             if (handle != SemFailed)
                 return handle;
 
             throw Error switch
             {
-                EINVAL => new ArgumentException($"The initial count cannot be greater than {SEMVALUEMAX}.", nameof(initialCount)),
-                ENAMETOOLONG => new ArgumentException($"The specified semaphore name is too long.", nameof(name)),
+                EINVAL => new ArgumentException($"Invalid name or the initial count cannot be greater than {SEMVALUEMAX}.", nameof(initialCount)),
+                ENAMETOOLONG => new ArgumentException("The specified semaphore name is too long.", nameof(name)),
                 EACCES => new PosixSempahoreUnauthorizedAccessException(),
                 EEXIST => new PosixSempahoreExistsException(),
                 EINTR => new OperationCanceledException(),
@@ -70,7 +72,7 @@ namespace Cloudtoid.Interprocess.Semaphore.MacOS
 
         internal static void Release(IntPtr handle)
         {
-            if (sem_post(handle) == 0)
+            if (gx_sem_post(handle) == 0)
                 return;
 
             throw Error switch
@@ -92,7 +94,7 @@ namespace Cloudtoid.Interprocess.Semaphore.MacOS
                 var start = DateTime.Now;
                 while (!TryWait(handle))
                 {
-                    if ((DateTime.Now - start).Milliseconds > millisecondsTimeout)
+                    if ((DateTime.Now - start).TotalMilliseconds > millisecondsTimeout)
                         return false;
 
                     Thread.Yield();
@@ -104,13 +106,13 @@ namespace Cloudtoid.Interprocess.Semaphore.MacOS
 
         private static void Wait(IntPtr handle)
         {
-            if (sem_wait(handle) == 0)
+            if (gx_sem_wait(handle) == 0)
                 return;
 
             throw Error switch
             {
                 EINVAL => new InvalidPosixSempahoreException(),
-                EDEADLK => new PosixSempahoreException($"A deadlock was detected attempting to wait on a semaphore."),
+                EDEADLK => new PosixSempahoreException("A deadlock was detected attempting to wait on a semaphore."),
                 EINTR => new OperationCanceledException(),
                 _ => new PosixSempahoreException(Error),
             };
@@ -118,7 +120,7 @@ namespace Cloudtoid.Interprocess.Semaphore.MacOS
 
         private static bool TryWait(IntPtr handle)
         {
-            if (sem_trywait(handle) == 0)
+            if (gx_sem_trywait(handle) == 0)
                 return true;
 
             return Error switch
@@ -133,7 +135,7 @@ namespace Cloudtoid.Interprocess.Semaphore.MacOS
 
         internal static void Close(IntPtr handle)
         {
-            if (sem_close(handle) == 0)
+            if (gx_sem_close(handle) == 0)
                 return;
 
             throw Error switch
@@ -145,7 +147,7 @@ namespace Cloudtoid.Interprocess.Semaphore.MacOS
 
         internal static void Unlink(string name)
         {
-            if (sem_unlink(name) == 0)
+            if (gx_sem_unlink(name) == 0)
                 return;
 
             throw Error switch

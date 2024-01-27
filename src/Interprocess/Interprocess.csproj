@@ -22,5 +22,14 @@
     <VersionSuffix Condition=" '$(VersionSuffix)'=='' ">0</VersionSuffix>
     <PackageVersion>2.0.0-alpha$(VersionSuffix)</PackageVersion>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="SemaphoreMacOSDelegator.c" />
+    <Content Include="bin\Cloudtoid.Interprocess.Native.dylib">
+      <PackagePath>runtimes\osx-arm64\native</PackagePath>
+    </Content>
+  </ItemGroup>
 
+  <Target Name="BuildNativeMacOS" BeforeTargets="BeforeBuild" Inputs="SemaphoreMacOSDelegator.c" Outputs="bin/Cloudtoid.Interprocess.Native.dylib" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+    <Exec Command="clang -shared -o bin/Cloudtoid.Interprocess.Native.dylib SemaphoreMacOSDelegator.c" />
+  </Target>
 </Project>
