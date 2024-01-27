@@ -19,8 +19,23 @@ namespace Cloudtoid.Interprocess.Semaphore.MacOS
             handle = Interop.CreateOrOpenSemaphore(name, initialCount);
         }
 
+        private SemaphoreMacOS(string name, IntPtr handle)
+        {
+            this.name = name;
+            deleteOnDispose = false;
+            this.handle = handle;
+        }
+
         ~SemaphoreMacOS()
             => Dispose(false);
+
+        public static bool TryOpenExisting(string name, out SemaphoreMacOS? semaphoreMacOs)
+        {
+            name = HandleNamePrefix + name;
+            var handle = Interop.OpenExistingSemaphore(name);
+            semaphoreMacOs = handle == IntPtr.Zero ? null : new SemaphoreMacOS(name, handle);
+            return semaphoreMacOs != null;
+        }
 
         public void Dispose()
         {

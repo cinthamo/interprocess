@@ -19,8 +19,23 @@ namespace Cloudtoid.Interprocess.Semaphore.Linux
             handle = Interop.CreateOrOpenSemaphore(name, initialCount);
         }
 
+        private SemaphoreLinux(string name, IntPtr handle)
+        {
+            this.name = name;
+            deleteOnDispose = false;
+            this.handle = handle;
+        }
+
         ~SemaphoreLinux()
             => Dispose(false);
+
+        public static bool TryOpenExisting(string name, out SemaphoreLinux? semaphoreLinux)
+        {
+            name = HandleNamePrefix + name;
+            var handle = Interop.OpenExistingSemaphore(name);
+            semaphoreLinux = handle == IntPtr.Zero ? null : new SemaphoreLinux(name, handle);
+            return semaphoreLinux != null;
+        }
 
         public void Dispose()
         {

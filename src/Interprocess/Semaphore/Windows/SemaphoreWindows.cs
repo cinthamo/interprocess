@@ -13,6 +13,27 @@ namespace Cloudtoid.Interprocess.Semaphore.Windows
             handle = new SysSemaphore(initialCount, maximumCount, HandleNamePrefix + name);
         }
 
+        private SemaphoreWindows(SysSemaphore handle)
+        {
+            this.handle = handle;
+        }
+
+        public static bool TryOpenExisting(string name, out SemaphoreWindows? semaphoreWindows)
+        {
+#pragma warning disable CA1416
+            if (SysSemaphore.TryOpenExisting(HandleNamePrefix + name, out SysSemaphore? semaphore))
+#pragma warning restore CA1416
+            {
+                semaphoreWindows = new SemaphoreWindows(semaphore);
+                return true;
+            }
+            else
+            {
+                semaphoreWindows = null;
+                return false;
+            }
+        }
+
         public void Dispose()
             => handle.Dispose();
 

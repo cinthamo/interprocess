@@ -28,6 +28,9 @@ namespace Cloudtoid.Interprocess.Semaphore.Linux
         private static unsafe int Error => Marshal.GetLastWin32Error();
 
         [DllImport(Lib, SetLastError = true)]
+        private static extern IntPtr sem_open([MarshalAs(UnmanagedType.LPUTF8Str)] string name, int oflag);
+
+        [DllImport(Lib, SetLastError = true)]
         private static extern IntPtr sem_open([MarshalAs(UnmanagedType.LPUTF8Str)] string name, int oflag, uint mode, uint value);
 
         [DllImport(Lib, SetLastError = true)]
@@ -62,6 +65,25 @@ namespace Cloudtoid.Interprocess.Semaphore.Linux
                 EMFILE => new PosixSempahoreException("Too many semaphores or file descriptors are open by this process."),
                 ENOMEM => new InsufficientMemoryException(),
                 _ => new PosixSempahoreException(Error),
+            };
+        }
+
+        internal static IntPtr OpenExistingSemaphore(string name)
+        {
+            var handle = sem_open(name, 0);
+            if (handle != IntPtr.Zero)
+                return handle;
+
+            return Error switch
+            {
+                ENOENT => IntPtr.Zero, // semaphore does not exist
+                ENAMETOOLONG => throw new ArgumentException("The specified semaphore name is too long.", nameof(name)),
+                EACCES => throw new PosixSempahoreUnauthorizedAccessException(),
+                EINVAL => throw new InvalidPosixSempahoreException(),
+                EINTR => throw new OperationCanceledException(),
+                ENFILE => throw new PosixSempahoreException("Too many semaphores or file descriptors are open on the system."),
+                EMFILE => throw new PosixSempahoreException("Too many semaphores or file descriptors are open by this process."),
+                _ => throw new PosixSempahoreException(Error),
             };
         }
 

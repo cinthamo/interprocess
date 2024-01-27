@@ -70,6 +70,25 @@ namespace Cloudtoid.Interprocess.Semaphore.MacOS
             };
         }
 
+        internal static IntPtr OpenExistingSemaphore(string name)
+        {
+            var handle = gx_sem_open_existing(name);
+            if (handle != SemFailed)
+                return handle;
+
+            return Error switch
+            {
+                ENOENT => IntPtr.Zero, // semaphore does not exist
+                ENAMETOOLONG => throw new ArgumentException("The specified semaphore name is too long.", nameof(name)),
+                EACCES => throw new PosixSempahoreUnauthorizedAccessException(),
+                EINVAL => throw new InvalidPosixSempahoreException(),
+                EINTR => throw new OperationCanceledException(),
+                ENFILE => throw new PosixSempahoreException("Too many semaphores or file descriptors are open on the system."),
+                EMFILE => throw new PosixSempahoreException("Too many semaphores or file descriptors are open by this process."),
+                _ => throw new PosixSempahoreException(Error),
+            };
+        }
+
         internal static void Release(IntPtr handle)
         {
             if (gx_sem_post(handle) == 0)
